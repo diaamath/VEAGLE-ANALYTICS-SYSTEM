@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite Performance & Tactical Coaching Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .pitch-container {
+            position: relative;
+            background-color: #111827;
+        }
+        custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        custom-scrollbar::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-emerald-500 selection:text-white">
+
+    <header class="border-b border-slate-800 bg-slate-900/80 sticky top-0 z-50 backdrop-blur-md px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <div class="bg-emerald-500 text-slate-950 p-2.5 rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center">
+                <i class="fa-solid :fa-chart-line text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">VEAGLE-ANALYTICS-SYSTEM</h1>
+                <p class="text-xs text-slate-400 font-medium tracking-wide uppercase">Elite Coaching & Tactical Insights</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3 text-sm">
+            <span id="status-badge" class="px-3 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center gap-2 font-medium">
+                <span class="h-2 w-2 rounded-full bg-rose-500 animate-pulse"></span> No Data Loaded
+            </span>
+        </div>
+    </header>
+
+    <main class="p-6 max-w-[1600px] mx-auto space-y-8">
+
+        <section class="glass-card rounded-2xl p-6 shadow-xl">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-up text-emerald-400"></i> Match Data Ingestion Hub
+                    </h2>
+                    <p class="text-sm text-slate-400">Upload your tracking and statistical CSV files to populate the coaching system.</p>
+                </div>
+                <button onclick="loadSampleData()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition duration-200 flex items-center gap-2 border border-slate-700">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Use Presets / Clear
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="border-2 border-dashed border-slate-700 hover:border-emerald-500/50 rounded-xl p-5 text-center transition bg-slate-900/40 relative group">
+                    <input type="file" id="file-player" accept=".csv" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleFileSelect(this, 'player')">
+                    <div class="space-y-2 pointer-events-none">
+                        <div id="icon-player" class="text-slate-500 group-hover:text-emerald-400 transition text-2xl">
+                            <i class="fa-solid fa-users-rectangle"></i>
+                        </div>
+                        <p class="text-xs font-semibold text-slate-300">Player Statistics CSV</p>
+                        <p id="label-player" class="text-[11px] text-slate-500 truncate">Click or drag file here</p>
+                    </div>
+                </div>
+
+                <div class="border-2 border-dashed border-slate-700 hover:border-emerald-500/50 rounded-xl p-5 text-center transition bg-slate-900/40 relative group">
+                    <input type="file" id="file-team" accept=".csv" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleFileSelect(this, 'team')">
+                    <div class="space-y-2 pointer-events-none">
+                        <div id="icon-team" class="text-slate-500 group-hover:text-emerald-400 transition text-2xl">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <p class="text-xs font-semibold text-slate-300">Team Statistics CSV</p>
+                        <p id="label-team" class="text-[11px] text-slate-500 truncate">Click or drag file here</p>
+                    </div>
+                </div>
+
+                <div class="border-2 border-dashed border-slate-700 hover:border-emerald-500/50 rounded-xl p-5 text-center transition bg-slate-900/40 relative group">
+                    <input type="file" id="file-tracking" accept=".csv" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleFileSelect(this, 'tracking')">
+                    <div class="space-y-2 pointer-events-none">
+                        <div id="icon-tracking" class="text-slate-500 group-hover:text-emerald-400 transition text-2xl">
+                            <i class="fa-solid fa-shoe-prints"></i>
+                        </div>
+                        <p class="text-xs font-semibold text-slate-300">High-Freq Tracking Data CSV</p>
+                        <p id="label-tracking" class="text-[11px] text-slate-500 truncate">Click or drag file here</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div id="dashboard-content" class="space-y-8">
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+                <div class="glass-card rounded-xl p-5 flex items-center justify-between shadow-md">
+                    <div>
+                        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Active Roster Size</p>
+                        <h3 id="stat-roster" class="text-2xl font-black text-white mt-1">-</h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Total players logged</p>
+                    </div>
+                    <div class="h-12 w-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-xl"><i class="fa-solid fa-id-card"></i></div>
+                </div>
+                <div class="glass-card rounded-xl p-5 flex items-center justify-between shadow-md">
+                    <div>
+                        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Total Combined Distance</p>
+                        <h3 id="stat-distance" class="text-2xl font-black text-white mt-1">-</h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Meters covered overall</p>
+                    </div>
+                    <div class="h-12 w-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl"><i class="fa-solid fa-route"></i></div>
+                </div>
+                <div class="glass-card rounded-xl p-5 flex items-center justify-between shadow-md">
+                    <div>
+                        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Total Sprint Bursts</p>
+                        <h3 id="stat-sprints" class="text-2xl font-black text-white mt-1">-</h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">High intensity accelerations</p>
+                    </div>
+                    <div class="h-12 w-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-xl"><i class="fa-solid fa-bolt"></i></div>
+                </div>
+                <div class="glass-card rounded-xl p-5 flex items-center justify-between shadow-md">
+                    <div>
+                        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Peak Velocity Tracked</p>
+                        <h3 id="stat-maxspeed" class="text-2xl font-black text-white mt-1">-</h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Top registered speed</p>
+                    </div>
+                    <div class="h-12 w-12 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-xl"><i class="fa-solid fa-gauge-high"></i></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <div class="glass-card rounded-2xl p-6 lg:col-span-2 shadow-xl flex flex-col justify-between">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                        <div>
+                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-circle-nodes text-emerald-400"></i> Average Field Formations Mapping
+                            </h2>
+                            <p class="text-sm text-slate-400">Spatial analysis derived from player centroids ($X$, $Y$ coordinate matrices).</p>
+                        </div>
+                        <div class="flex gap-2 bg-slate-900 p-1 rounded-lg border border-slate-800 text-xs">
+                            <button id="btn-filter-all" onclick="filterPitch('all')" class="px-3 py-1.5 rounded-md bg-emerald-500 text-slate-950 font-bold transition">All</button>
+                            <button id="btn-filter-A" onclick="filterPitch('Team A')" class="px-3 py-1.5 rounded-md hover:bg-slate-800 text-cyan-400 transition font-medium">Team A</button>
+                            <button id="btn-filter-B" onclick="filterPitch('Team B')" class="px-3 py-1.5 rounded-md hover:bg-slate-800 text-rose-400 transition font-medium">Team B</button>
+                        </div>
+                    </div>
+
+                    <div class="pitch-container border border-slate-800 rounded-xl p-4 flex items-center justify-center bg-slate-950/60 shadow-inner">
+                        <canvas id="pitchCanvas" width="680" height="420" class="max-w-full rounded-lg bg-emerald-950/20"></canvas>
+                    </div>
+                    <div class="mt-3 flex flex-wrap justify-center gap-6 text-xs text-slate-400">
+                        <span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-full bg-cyan-400 block shadow-sm"></span> Team A Players</span>
+                        <span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-full bg-rose-500 block shadow-sm"></span> Team B Players</span>
+                        <span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-full bg-yellow-400 block shadow-sm"></span> Officials/Referees</span>
+                        <span class="text-slate-500 italic"><i class="fa-solid fa-circle-info"></i> Hover over nodes when individual player is isolated.</span>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-chart-bar text-cyan-400"></i> Tactical Team Comparison
+                        </h2>
+                        <p class="text-sm text-slate-400 mb-6">Comparative metrics breakdown between opposing units.</p>
+                    </div>
+                    
+                    <div class="relative w-full aspect-square max-h-[300px] flex items-center justify-center">
+                        <canvas id="teamComparisonChart"></canvas>
+                    </div>
+
+                    <div class="mt-4 p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-xs space-y-2">
+                        <p class="font-bold text-slate-200 uppercase tracking-wide text-[10px] flex items-center gap-1">
+                            <i class="fa-solid fa-brain text-amber-400"></i> Coaching Directive Note:
+                        </p>
+                        <p id="coaching-insight-text" class="text-slate-400 leading-relaxed">
+                            Analyze line-breaking metrics and spatial compacteness using the tactical canvas mapping. Ensure your squad maintains defensive shape stability.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass-card rounded-xl p-5 shadow-lg border border-slate-800">
+                    <h3 class="text-sm font-bold text-slate-200 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-person-running text-emerald-400"></i> Top Distance Engines
+                    </h3>
+                    <div class="overflow-x-auto max-h-[250px] custom-scrollbar">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="text-slate-500 border-b border-slate-800">
+                                    <th class="pb-2 font-medium">ID</th>
+                                    <th class="pb-2 font-medium">Team</th>
+                                    <th class="pb-2 text-right font-medium">Distance (m)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-distance-body" class="divide-y divide-slate-800/40 text-slate-300">
+                                <tr><td colspan="3" class="py-4 text-center text-slate-500">No data available</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-xl p-5 shadow-lg border border-slate-800">
+                    <h3 class="text-sm font-bold text-slate-200 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-gauge-high text-cyan-400"></i> Max Velocity Leaders
+                    </h3>
+                    <div class="overflow-x-auto max-h-[250px] custom-scrollbar">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="text-slate-500 border-b border-slate-800">
+                                    <th class="pb-2 font-medium">ID</th>
+                                    <th class="pb-2 font-medium">Team</th>
+                                    <th class="pb-2 text-right font-medium">Max Speed (m/s)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-speed-body" class="divide-y divide-slate-800/40 text-slate-300">
+                                <tr><td colspan="3" class="py-4 text-center text-slate-500">No data available</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-xl p-5 shadow-lg border border-slate-800">
+                    <h3 class="text-sm font-bold text-slate-200 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-person-running-fast text-amber-400"><i class="fa-solid fa-bolt"></i></i> Sprint Volume Kings
+                    </h3>
+                    <div class="overflow-x-auto max-h-[250px] custom-scrollbar">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="text-slate-500 border-b border-slate-800">
+                                    <th class="pb-2 font-medium">ID</th>
+                                    <th class="pb-2 font-medium">Team</th>
+                                    <th class="pb-2 text-right font-medium">Sprint Count</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-sprints-body" class="divide-y divide-slate-800/40 text-slate-300">
+                                <tr><td colspan="3" class="py-4 text-center text-slate-500">No data available</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <section class="glass-card rounded-2xl p-6 shadow-xl space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-user-gear text-emerald-400"></i> Individual Player Profile Drill-Down
+                        </h2>
+                        <p class="text-sm text-slate-400">Select an isolated roster player to analyze physical profiles and tracking vectors.</p>
+                    </div>
+                    <div class="w-full sm:w-64">
+                        <select id="player-selector" onchange="loadPlayerProfile(this.value)" class="w-full bg-slate-900 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-emerald-500">
+                            <option value="">Select a player ID...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="player-profile-panel" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="space-y-4">
+                        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-5 flex items-center gap-4">
+                            <div id="prof-team-color" class="h-14 w-14 rounded-full flex items-center justify-center text-2xl font-black text-slate-950">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Player Identifier</h3>
+                                <h2 id="prof-id" class="text-2xl font-black text-white">-</h2>
+                                <span id="prof-team-badge" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide"></span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-slate-900/40 border border-slate-800 rounded-xl p-4">
+                                <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Distance Covered</p>
+                                <p id="prof-dist" class="text-lg font-black text-white mt-1">-</p>
+                            </div>
+                            <div class="bg-slate-900/40 border border-slate-800 rounded-xl p-4">
+                                <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Sprints Volume</p>
+                                <p id="prof-sprint" class="text-lg font-black text-white mt-1">-</p>
+                            </div>
+                            <div class="bg-slate-900/40 border border-slate-800 rounded-xl p-4">
+                                <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Average Velocity</p>
+                                <p id="prof-avgspeed" class="text-lg font-black text-white mt-1">-</p>
+                            </div>
+                            <div class="bg-slate-900/40 border border-slate-800 rounded-xl p-4">
+                                <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Ball Touches</p>
+                                <p id="prof-touches" class="text-lg font-black text-white mt-1">-</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/30 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+                        <h4 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-2"><i class="fa-solid fa-gauge"></i> Velocity vs Match Intensity Thresholds</h4>
+                        <div class="relative w-full h-44 flex items-center justify-center">
+                            <canvas id="playerGaugeChart"></canvas>
+                        </div>
+                        <p class="text-[11px] text-center text-slate-500 italic mt-2">Registers maximum peak speed ($m/s$) relative to standard physical pacing targets.</p>
+                    </div>
+
+                    <div class="bg-slate-900/30 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+                        <div>
+                            <h4 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-1"><i class="fa-solid fa-location-crosshairs"></i> Positional Matrix Analysis</h4>
+                            <p class="text-[11px] text-slate-500 mb-2">Detailed coordinate tracking of player metrics.</p>
+                        </div>
+                        <div class="p-3 bg-slate-950 rounded-lg text-xs space-y-2 font-mono text-slate-300">
+                            <div class="flex justify-between border-b border-slate-800 pb-1">
+                                <span class="text-slate-500">Mean Field Coord X:</span>
+                                <span id="prof-coord-x" class="text-emerald-400">-</span>
+                            </div>
+                            <div class="flex justify-between border-b border-slate-800 pb-1">
+                                <span class="text-slate-500">Mean Field Coord Y:</span>
+                                <span id="prof-coord-y" class="text-emerald-400">-</span>
+                            </div>
+                            <div class="flex justify-between border-b border-slate-800 pb-1">
+                                <span class="text-slate-500">Active High-Freq Samples:</span>
+                                <span id="prof-samples-count" class="text-cyan-400">0 rows</span>
+                            </div>
+                            <p class="text-[10px] font-sans text-slate-400 leading-snug pt-1">
+                                <span class="text-amber-400 font-bold">Tactical Review:</span> This player's spatial map node has been isolated on the main tactical canvas above. Look at the primary canvas map to examine formation positioning.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="player-profile-fallback" class="p-8 border border-dashed border-slate-800 rounded-xl text-center text-slate-500 text-sm">
+                    <i class="fa-solid fa-user-astronaut text-3xl mb-2 block text-slate-700"></i>
+                    Please select a specific Player ID from the dropdown to access deep statistical matrix and velocity gauges.
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="mt-16 border-t border-slate-900 bg-slate-950 p-6 text-center text-xs text-slate-600">
+        <p>© 2026 VEAGLE Sports Intelligence Platform. Engineered for Tactical Optimization & Coaching Metrics.</p>
+    </footer>
+
+    <script>
+        // Global Data Repositories
+        let playersRaw = [];
+        let teamsRaw = [];
+        let trackingRaw = [];
+
+        let teamComparisonChartInstance = null;
+        let playerGaugeChartInstance = null;
+        let activePitchFilter = 'all';
+        let activeSelectedPlayerId = null;
+
+        // Initialize empty charts on startup
+        window.addEventListener('DOMContentLoaded', () => {
+            initEmptyCharts();
+            // Automatically prompt with placeholders or read fields
+            document.getElementById('dashboard-content').style.opacity = '0.5';
+        });
+
+        // Safe placeholder mock injector to show dashboard layout immediately if user wants demo
+        function loadSampleData() {
+            location.reload();
+        }
+
+        // Master CSV processing distribution routing
+        function handleFileSelect(inputElement, type) {
+            const file = inputElement.files[0];
+            if (!file) return;
+
+            // Visual update to label
+            document.getElementById(`label-${type}`).innerText = file.name;
+            document.getElementById(`label-${type}`).className = "text-[11px] text-emerald-400 font-semibold truncate";
+            document.getElementById(`icon-${type}`).className = "text-emerald-400 text-2xl transition";
+
+            Papa.parse(file, {
+                header: true,
+                dynamicTyping: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    console.log(`Parsed ${type} data successfully:`, results.data.length, "rows");
+                    
+                    if (type === 'player') {
+                        playersRaw = results.data;
+                    } else if (type === 'team') {
+                        teamsRaw = results.data;
+                    } else if (type === 'tracking') {
+                        trackingRaw = results.data;
+                    }
+
+                    // Process elements and remove dashboard locks
+                    document.getElementById('dashboard-content').style.opacity = '1';
+                    evaluateAndRenderDashboard();
+                }
+            });
+        }
+
+        function evaluateAndRenderDashboard() {
+            // Update Top status badge based on loaded artifacts
+            const statusBadge = document.getElementById('status-badge');
+            let statusText = [];
+            if(playersRaw.length) statusText.push("Players");
+            if(teamsRaw.length) statusText.push("Teams");
+            if(trackingRaw.length) statusText.push("Tracking Data Matrix");
+
+            if(statusText.length > 0) {
+                statusBadge.className = "px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-2 font-medium";
+                statusBadge.innerHTML = `<span class="h-2 w-2 rounded-full bg-emerald-500"></span> Live Metrics: ${statusText.join(' + ')}`;
+            }
+
+            // Compute aggregations across metrics
+            calculateGlobalMetricsSummary();
+            
+            // Build leaderboards if player stats are ready
+            if (playersRaw.length > 0) {
+                populateLeaderboards();
+                populatePlayerSelector();
+                drawTacticalPitch();
+            }
+
+            // Render team comparative graph charts
+            updateTeamChart();
+        }
+
+        function calculateGlobalMetricsSummary() {
+            let totalPlayers = playersRaw.length || "-";
+            let totalDist = 0;
+            let totalSprints = 0;
+            let peakSpeed = 0;
+
+            if (playersRaw.length > 0) {
+                playersRaw.forEach(p => {
+                    if(p.Distance_Covered_m) totalDist += p.Distance_Covered_m;
+                    if(p.Sprint_Count) totalSprints += p.Sprint_Count;
+                    if(p.Max_Speed_ms && p.Max_Speed_ms > peakSpeed) peakSpeed = p.Max_Speed_ms;
+                });
+                
+                document.getElementById('stat-roster').innerText = totalPlayers;
+                document.getElementById('stat-distance').innerText = (totalDist).toFixed(1) + " m";
+                document.getElementById('stat-sprints').innerText = totalSprints.toLocaleString();
+                document.getElementById('stat-maxspeed').innerText = peakSpeed.toFixed(2) + " m/s";
+            } else if (teamsRaw.length > 0) {
+                // Fallback to team data totals
+                teamsRaw.forEach(t => {
+                    if(t.Team !== 'Referee') {
+                        totalDist += t.Distance_Covered_m || 0;
+                        totalSprints += t.Sprint_Count || 0;
+                        if(t.Max_Speed_ms > peakSpeed) peakSpeed = t.Max_Speed_ms;
+                    }
+                });
+                document.getElementById('stat-distance').innerText = totalDist.toFixed(1) + " m";
+                document.getElementById('stat-sprints').innerText = totalSprints;
+                document.getElementById('stat-maxspeed').innerText = peakSpeed + " m/s";
+            }
+        }
+
+        function populateLeaderboards() {
+            // Filter out ref values to prioritize player insights
+            const validPlayers = playersRaw.filter(p => p.Player_ID && p.Team !== 'Referee');
+
+            // 1. Distance Covered Engine Top 5
+            const topDistance = [...validPlayers].sort((a,b) => b.Distance_Covered_m - a.Distance_Covered_m).slice(0, 5);
+            let distHtml = "";
+            topDistance.forEach(p => {
+                const badgeColor = p.Team === 'Team A' ? 'text-cyan-400' : 'text-rose-400';
+                distHtml += `<tr class="border-b border-slate-800/30 hover:bg-slate-900/50">
+                    <td class="py-2.5 font-bold font-mono">#${p.Player_ID}</td>
+                    <td class="py-2.5 ${badgeColor} font-medium">${p.Team}</td>
+                    <td class="py-2.5 text-right font-black text-white">${p.Distance_Covered_m.toFixed(2)}</td>
+                </tr>`;
+            });
+            document.getElementById('table-distance-body').innerHTML = distHtml || "<tr><td colspan='3'>No valid rows</td></tr>";
+
+            // 2. Max Speed Leaders
+            const topSpeed = [...validPlayers].sort((a,b) => b.Max_Speed_ms - a.Max_Speed_ms).slice(0, 5);
+            let speedHtml = "";
+            topSpeed.forEach(p => {
+                const badgeColor = p.Team === 'Team A' ? 'text-cyan-400' : 'text-rose-400';
+                speedHtml += `<tr class="border-b border-slate-800/30 hover:bg-slate-900/50">
+                    <td class="py-2.5 font-bold font-mono">#${p.Player_ID}</td>
+                    <td class="py-2.5 ${badgeColor} font-medium">${p.Team}</td>
+                    <td class="py-2.5 text-right font-black text-emerald-400">${p.Max_Speed_ms.toFixed(2)}</td>
+                </tr>`;
+            });
+            document.getElementById('table-speed-body').innerHTML = speedHtml || "<tr><td colspan='3'>No valid rows</td></tr>";
+
+            // 3. Sprint Volume
+            const topSprints = [...validPlayers].sort((a,b) => b.Sprint_Count - a.Sprint_Count).slice(0, 5);
+            let sprintHtml = "";
+            topSprints.forEach(p => {
+                const badgeColor = p.Team === 'Team A' ? 'text-cyan-400' : 'text-rose-400';
+                sprintHtml += `<tr class="border-b border-slate-800/30 hover:bg-slate-900/50">
+                    <td class="py-2.5 font-bold font-mono">#${p.Player_ID}</td>
+                    <td class="py-2.5 ${badgeColor} font-medium">${p.Team}</td>
+                    <td class="py-2.5 text-right font-black text-amber-400">${p.Sprint_Count}</td>
+                </tr>`;
+            });
+            document.getElementById('table-sprints-body').innerHTML = sprintHtml || "<tr><td colspan='3'>No valid rows</td></tr>";
+        }
+
+        function populatePlayerSelector() {
+            const selector = document.getElementById('player-selector');
+            // Keep the default instruction option
+            selector.innerHTML = '<option value="">Select a player ID...</option>';
+            
+            // Sort by ID numeric value
+            const uniquePlayers = playersRaw
+                .filter(p => p.Player_ID)
+                .sort((a, b) => a.Player_ID - b.Player_ID);
+
+            uniquePlayers.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.Player_ID;
+                opt.innerText = `Player #${p.Player_ID} (${p.Team})`;
+                selector.appendChild(opt);
+            });
+        }
+
+        function filterPitch(team) {
+            activePitchFilter = team;
+            // Update UI button highlights
+            ['all', 'Team A', 'Team B'].forEach(t => {
+                const btn = document.getElementById(`btn-filter-${t === 'all' ? 'all' : t === 'Team A' ? 'A' : 'B'}`);
+                if (t === team) {
+                    btn.className = "px-3 py-1.5 rounded-md bg-emerald-500 text-slate-950 font-bold transition";
+                } else {
+                    let textCol = t === 'Team A' ? 'text-cyan-400' : t === 'Team B' ? 'text-rose-400' : 'text-slate-300';
+                    btn.className = `px-3 py-1.5 rounded-md hover:bg-slate-800 ${textCol} transition font-medium`;
+                }
+            });
+            drawTacticalPitch();
+        }
+
+        // Draw Interactive Soccer Field Elements via Native Canvas APIs
+        function drawTacticalPitch() {
+            const canvas = document.getElementById('pitchCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear Frame Canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Pitch Background Colors
+            ctx.fillStyle = "rgba(16, 185, 129, 0.08)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw Field Boundaries
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(15, 15, canvas.width - 30, canvas.height - 30);
+            
+            // Center line dividing field
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 15);
+            ctx.lineTo(canvas.width / 2, canvas.height - 15);
+            ctx.stroke();
+            
+            // Center Circle Ring
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, 50, 0, 2 * Math.PI);
+            ctx.stroke();
+
+            // Center spot dot
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, 3, 0, 2 * Math.PI);
+            ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+            ctx.fill();
+
+            // Penalty Boxes Left Side
+            ctx.strokeRect(15, canvas.height / 2 - 80, 65, 160);
+            ctx.strokeRect(15, canvas.height / 2 - 40, 22, 80);
+
+            // Penalty Boxes Right Side
+            ctx.strokeRect(canvas.width - 80, canvas.height / 2 - 80, 65, 160);
+            ctx.strokeRect(canvas.width - 37, canvas.height / 2 - 40, 22, 80);
+
+            // Corner Arcs
+            const rArc = 10;
+            // Top Left
+            ctx.beginPath(); ctx.arc(15, 15, rArc, 0, 0.5 * Math.PI); ctx.stroke();
+            // Bottom Left
+            ctx.beginPath(); ctx.arc(15, canvas.height - 15, rArc, 1.5 * Math.PI, 2 * Math.PI); ctx.stroke();
+            // Top Right
+            ctx.beginPath(); ctx.arc(canvas.width - 15, 15, rArc, 0.5 * Math.PI, Math.PI); ctx.stroke();
+            // Bottom Right
+            ctx.beginPath(); ctx.arc(canvas.width - 15, canvas.height - 15, rArc, Math.PI, 1.5 * Math.PI); ctx.stroke();
+
+            if (playersRaw.length === 0) return;
+
+            // Map data bounds safely to pixel dimensions
+            // Dataset X bounds: ~0 to 110. Y bounds: ~0 to 43.
+            const minX = 0, maxX = 110;
+            const minY = 0, maxY = 45;
+
+            function getPixelCoords(x, y) {
+                const px = 15 + ((x - minX) / (maxX - minX)) * (canvas.width - 30);
+                const py = 15 + ((y - minY) / (maxY - minY)) * (canvas.height - 30);
+                return { x: px, y: py };
+            }
+
+            // Scatter mapping points
+            playersRaw.forEach(p => {
+                if (!p.Avg_Field_Position_X || !p.Avg_Field_Position_Y) return;
+
+                // Evaluate standard tactical team visibility filter
+                if (activePitchFilter !== 'all' && p.Team !== activePitchFilter) return;
+                
+                // If a player is isolated via drill-down dropdown, make others transparent
+                let opacity = "0.85";
+                let radius = 6;
+                if (activeSelectedPlayerId !== null) {
+                    if (p.Player_ID === activeSelectedPlayerId) {
+                        opacity = "1.0";
+                        radius = 9; // Highlight targeted node size
+                    } else {
+                        opacity = "0.15"; // Attenuate backdrop nodes
+                    }
+                }
+
+                // Node color configuration
+                let fillStyle = `rgba(234, 179, 8, ${opacity})`; // Referee/Default Yellow
+                if (p.Team === 'Team A') fillStyle = `rgba(34, 211, 238, ${opacity})`; // Cyan
+                if (p.Team === 'Team B') fillStyle = `rgba(244, 63, 94, ${opacity})`;  // Rose Neon
+
+                const pt = getPixelCoords(p.Avg_Field_Position_X, p.Avg_Field_Position_Y);
+
+                // Draw solid data position point
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, radius, 0, 2 * Math.PI);
+                ctx.fillStyle = fillStyle;
+                ctx.fill();
+
+                // Outer tactical border glow ring for target asset selection
+                if (p.Player_ID === activeSelectedPlayerId) {
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    // Label identity overlay above target node
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 11px sans-serif';
+                    ctx.fillText(`P#${p.Player_ID}`, pt.x - 12, pt.y - 14);
+                } else if (activeSelectedPlayerId === null && opacity > 0.5) {
+                    // Discrete text marker tags
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
+                    ctx.font = '9px monospace';
+                    ctx.fillText(p.Player_ID, pt.x - 4, pt.y + 3);
+                }
+            });
+
+            // If active player is selected and high freq trail vector matrix uploaded, trace path!
+            if (activeSelectedPlayerId !== null && trackingRaw.length > 0) {
+                ctx.beginPath();
+                let pointsLogged = 0;
+                
+                // Optimized single scan iteration sampling route
+                for(let i = 0; i < trackingRaw.length; i += 20) { // Strided layout skips frames to speed up render
+                    const row = trackingRaw[i];
+                    if(row && row.track_id === activeSelectedPlayerId) {
+                        const tPt = getPixelCoords(row.x_m, row.y_m);
+                        if (pointsLogged === 0) {
+                            ctx.moveTo(tPt.x, tPt.y);
+                        } else {
+                            ctx.lineTo(tPt.x, tPt.y);
+                        }
+                        pointsLogged++;
+                    }
+                }
+                ctx.strokeStyle = 'rgba(16, 185, 129, 0.6)'; // Emerald tracking path vector trace
+                ctx.lineWidth = 2;
+                ctx.setLineDash([4, 4]);
+                ctx.stroke();
+                ctx.setLineDash([]); // Reset line style
+                
+                document.getElementById('prof-samples-count').innerText = `${pointsLogged} sample vectors traced`;
+            }
+        }
+
+        // Drill-down data profile loading logic
+        function loadPlayerProfile(playerId) {
+            if (!playerId) {
+                activeSelectedPlayerId = null;
+                document.getElementById('player-profile-panel').classList.add('hidden');
+                document.getElementById('player-profile-fallback').classList.remove('hidden');
+                drawTacticalPitch();
+                return;
+            }
+
+            activeSelectedPlayerId = parseInt(playerId);
+            const target = playersRaw.find(p => p.Player_ID === activeSelectedPlayerId);
+            
+            if (!target) return;
+
+            // Display components
+            document.getElementById('player-profile-fallback').classList.add('hidden');
+            document.getElementById('player-profile-panel').classList.remove('hidden');
+
+            // Populate specific fields
+            document.getElementById('prof-id').innerText = `#${target.Player_ID}`;
+            document.getElementById('prof-dist').innerText = `${target.Distance_Covered_m.toFixed(1)} m`;
+            document.getElementById('prof-sprint').innerText = `${target.Sprint_Count} bursts`;
+            document.getElementById('prof-avgspeed').innerText = `${target.Avg_Speed_ms.toFixed(2)} m/s`;
+            document.getElementById('prof-touches').innerText = `${target.Ball_Possession_Touches || 0} touches`;
+            document.getElementById('prof-coord-x').innerText = target.Avg_Field_Position_X.toFixed(2);
+            document.getElementById('prof-coord-y').innerText = target.Avg_Field_Position_Y.toFixed(2);
+
+            // Badge coloring adjustments
+            const badge = document.getElementById('prof-team-badge');
+            const avatar = document.getElementById('prof-team-color');
+            badge.innerText = target.Team;
+            
+            if (target.Team === 'Team A') {
+                badge.className = "px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-cyan-500/20 text-cyan-400 border border-cyan-500/30";
+                avatar.className = "h-14 w-14 rounded-full flex items-center justify-center text-2xl font-black bg-cyan-400 text-slate-950";
+            } else if (target.Team === 'Team B') {
+                badge.className = "px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-rose-500/20 text-rose-400 border border-rose-500/30";
+                avatar.className = "h-14 w-14 rounded-full flex items-center justify-center text-2xl font-black bg-rose-500 text-slate-950";
+            } else {
+                badge.className = "px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-amber-500/20 text-amber-400 border border-amber-500/30";
+                avatar.className = "h-14 w-14 rounded-full flex items-center justify-center text-2xl font-black bg-amber-400 text-slate-950";
+            }
+
+            // Update gauge component chart for selected asset
+            updateGaugeChart(target.Max_Speed_ms);
+            
+            // Re-render field map to frame isolated view
+            drawTacticalPitch();
+        }
+
+        // Initialize empty dashboard charting components
+        function initEmptyCharts() {
+            // 1. Team Comparison Multi Bar Chart
+            const ctxTeam = document.getElementById('teamComparisonChart').getContext('2d');
+            teamComparisonChartInstance = new Chart(ctxTeam, {
+                type: 'bar',
+                data: {
+                    labels: ['Distance (x100m)', 'Max Speed (m/s)', 'Sprints Vol (x10)'],
+                    datasets: [
+                        { label: 'Team A', data: [0, 0, 0], backgroundColor: 'rgba(34, 211, 238, 0.85)', borderColor: '#22d3ee', borderWidth: 1 },
+                        { label: 'Team B', data: [0, 0, 0], backgroundColor: 'rgba(244, 63, 94, 0.85)', borderColor: '#f43f5e', borderWidth: 1 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#94a3b8', font: { family: 'sans-serif', size: 11 } } } },
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+                        x: { grid: { display: false }, ticks: { color: '#64748b' } }
+                    }
+                }
+            });
+
+            // 2. Individual Speed Gauge Chart
+            const ctxGauge = document.getElementById('playerGaugeChart').getContext('2d');
+            playerGaugeChartInstance = new Chart(ctxGauge, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Current Velocity Target', 'Remaining Headroom'],
+                    datasets: [{
+                        data: [0, 40], // Upper bound clip ceiling around 40 m/s max metric limits
+                        backgroundColor: ['#10b981', 'rgba(255,255,255,0.05)'],
+                        borderWidth: 0,
+                        circumference: 180,
+                        rotation: 270
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    cutout: '80%'
+                }
+            });
+        }
+
+        function updateTeamChart() {
+            if (!teamComparisonChartInstance) return;
+
+            let teamA_Metrics = [0, 0, 0];
+            let teamB_Metrics = [0, 0, 0];
+
+            if (teamsRaw.length > 0) {
+                const rowA = teamsRaw.find(t => t.Team === 'Team A');
+                const rowB = teamsRaw.find(t => t.Team === 'Team B');
+
+                if(rowA) {
+                    teamA_Metrics = [
+                        (rowA.Distance_Covered_m / 100) || 0,
+                        rowA.Max_Speed_ms || 0,
+                        (rowA.Sprint_Count / 10) || 0
+                    ];
+                }
+                if(rowB) {
+                    teamB_Metrics = [
+                        (rowB.Distance_Covered_m / 100) || 0,
+                        rowB.Max_Speed_ms || 0,
+                        (rowB.Sprint_Count / 10) || 0
+                    ];
+                }
+            } else if (playersRaw.length > 0) {
+                // Compute on-the-fly summary if full team summary file skipped
+                let distA = 0, distB = 0, maxA = 0, maxB = 0, sprA = 0, sprB = 0;
+                playersRaw.forEach(p => {
+                    if (p.Team === 'Team A') {
+                        distA += p.Distance_Covered_m || 0;
+                        sprA += p.Sprint_Count || 0;
+                        if(p.Max_Speed_ms > maxA) maxA = p.Max_Speed_ms;
+                    } else if (p.Team === 'Team B') {
+                        distB += p.Distance_Covered_m || 0;
+                        sprB += p.Sprint_Count || 0;
+                        if(p.Max_Speed_ms > maxB) maxB = p.Max_Speed_ms;
+                    }
+                });
+                teamA_Metrics = [distA / 100, maxA, sprA / 10];
+                teamB_Metrics = [distB / 100, maxB, sprB / 10];
+            }
+
+            // High-level Tactical AI Coaching Assessment Generator
+            const insightBox = document.getElementById('coaching-insight-text');
+            if (teamsRaw.length > 0 || playersRaw.length > 0) {
+                const normDistA = teamA_Metrics[0] * 100;
+                const normDistB = teamB_Metrics[0] * 100;
+                
+                if (normDistA > normDistB * 1.5) {
+                    insightBox.innerHTML = `⚠️ <span class="text-amber-400 font-semibold">Volume Imbalance Detected:</span> Team A's cumulative spatial distance coverage significantly outpaces Team B. Team B may be playing with an extremely low defensive block or compressed horizontal lines.`;
+                } else {
+                    insightBox.innerHTML = `⚙️ <span class="text-emerald-400 font-semibold">Physical Pacing Equilibrium:</span> Inter-squad acceleration metrics appear balanced. Focus drills on positional transitional passing to shift opposing shapes effectively.`;
+                }
+            }
+
+            teamComparisonChartInstance.data.datasets[0].data = teamA_Metrics;
+            teamComparisonChartInstance.data.datasets[1].data = teamB_Metrics;
+            teamComparisonChartInstance.update();
+        }
+
+        function updateGaugeChart(velocity) {
+            if (!playerGaugeChartInstance) return;
+            
+            const maxCeil = 40; // Reference max limits metrics benchmark
+            const targetVal = Math.min(velocity, maxCeil);
+            const remaining = maxCeil - targetVal;
+
+            playerGaugeChartInstance.data.datasets[0].data = [targetVal, remaining];
+            
+            // Switch gauge colors dynamically depending on output ranges
+            if(velocity > 30) {
+                playerGaugeChartInstance.data.datasets[0].backgroundColor = ['#f43f5e', 'rgba(255,255,255,0.05)']; // High speed burst (Rose)
+            } else if(velocity > 15) {
+                playerGaugeChartInstance.data.datasets[0].backgroundColor = ['#38bdf8', 'rgba(255,255,255,0.05)']; // Medium intensity (Sky Blue)
+            } else {
+                playerGaugeChartInstance.data.datasets[0].backgroundColor = ['#10b981', 'rgba(255,255,255,0.05)']; // Normal pacing (Emerald)
+            }
+
+            playerGaugeChartInstance.update();
+        }
+    </script>
+</body>
+</html>
