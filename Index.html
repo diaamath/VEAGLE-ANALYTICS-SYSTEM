@@ -372,7 +372,7 @@
             const file = inputElement.files[0];
             if (!file) return;
 
-            // Visual update to label
+            // Visual update to label immediately
             document.getElementById(`label-${type}`).innerText = file.name;
             document.getElementById(`label-${type}`).className = "text-[11px] text-emerald-400 font-semibold truncate";
             document.getElementById(`icon-${type}`).className = "text-emerald-400 text-2xl transition";
@@ -392,12 +392,14 @@
                         trackingRaw = results.data;
                     }
 
-                    // Process elements and remove dashboard locks
+                    // REMOVED THE STRICT LOCK: Now unlocks instantly if ANY data is present!
                     document.getElementById('dashboard-content').style.opacity = '1';
                     evaluateAndRenderDashboard();
                 }
             });
         }
+
+        
 
         function evaluateAndRenderDashboard() {
             // Update Top status badge based on loaded artifacts
